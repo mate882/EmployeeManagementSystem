@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Attendance{% else %}Add Attendance{% endif %} - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{% if object %}Edit Attendance Record{% else %}Add Attendance Record{% endif %}</h1>
+    <p class="page-subtitle">{% if object %}Update attendance information{% else %}Create a new attendance record{% endif %}</p>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <div class="form-group">
+                    <label class="form-label">{{ form.employee.label }}</label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}
+                        <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.employee.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.date.label }}</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.date.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.status.label }}</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.status.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">{{ form.clock_in.label }}</label>
+                        {{ form.clock_in }}
+                        {% if form.clock_in.errors %}
+                            <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.clock_in.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">{{ form.clock_out.label }}</label>
+                        {{ form.clock_out }}
+                        {% if form.clock_out.errors %}
+                            <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.clock_out.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.break_minutes.label }}</label>
+                    {{ form.break_minutes }}
+                    {% if form.break_minutes.errors %}
+                        <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.break_minutes.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+            <a href="{% url 'attendance_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if object %}Update Record{% else %}Create Record{% endif %}</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input, textarea, select');
+        
+        inputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        const statusField = document.getElementById('id_status');
+        const timeFields = document.querySelectorAll('#id_clock_in, #id_clock_out, #id_break_minutes');
+        
+        function toggleTimeFields() {
+            const status = statusField.value;
+            const shouldDisable = status !== 'present' && status !== 'partial';
+            
+            timeFields.forEach(field => {
+                field.disabled = shouldDisable;
+                if (shouldDisable) {
+                    field.value = '';
+                }
+            });
+        }
+        
+        statusField.addEventListener('change', toggleTimeFields);
+        toggleTimeFields();
+    });
+</script>
+{% endblock %}

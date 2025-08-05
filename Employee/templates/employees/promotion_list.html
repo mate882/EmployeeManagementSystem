@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Promotions - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Promotion History</h1>
+            <p class="page-subtitle">Track employee career progression</p>
+        </div>
+        <a href="{% url 'promote_employee' %}" class="btn btn-primary" title="Promote a new employee">Promote Employee</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Date</th>
+                    <th>Previous Position</th>
+                    <th>New Position</th>
+                    <th>Salary Change</th>
+                    <th>Approved By</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for promotion in promotions %}
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>{{ promotion.employee.full_name }}</strong><br>
+                                <small style="color: #666;">{{ promotion.employee.employee_id }}</small>
+                            </div>
+                        </td>
+                        <td><strong>{{ promotion.promotion_date|date:"Y-m-d" }}</strong></td>
+                        <td>
+                            <div>
+                                <div style="font-size: 0.9rem;">{{ promotion.previous_job_title.title|default:"-" }}</div>
+                                <small style="color: #666;">{{ promotion.previous_department.name|default:"-" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div style="font-weight: 600; color: #2c5aa0;">{{ promotion.new_job_title.title|default:"-" }}</div>
+                                <small style="color: #666;">{{ promotion.new_department.name|default:"-" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div style="color: #dc3545; text-decoration: line-through;">
+                                    ${{ promotion.previous_salary|floatformat:2 }}
+                                </div>
+                                <div style="color: #28a745; font-weight: 600;">
+                                    ${{ promotion.new_salary|floatformat:2 }}
+                                </div>
+                                {% with diff=promotion.new_salary|floatformat:2|floatformat:""|floatformat:2 %}
+                                    {% if promotion.new_salary > promotion.previous_salary %}
+                                        <small style="color: #28a745;">+${{ promotion.new_salary|floatformat:2|add:"-1"|add:promotion.previous_salary|floatformat:2 }}</small>
+                                    {% else %}
+                                        <small style="color: #dc3545;">-${{ promotion.previous_salary|floatformat:2|add:"-1"|add:promotion.new_salary|floatformat:2 }}</small>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </td>
+                        <td>
+                            {{ promotion.approved_by.get_full_name|default:promotion.approved_by.username|default:"-" }}
+                        </td>
+                        <td>
+                            <button 
+                                onclick="showPromotionDetails('{{ promotion.id }}')"
+                                class="btn btn-secondary btn-sm" 
+                                title="View full promotion details">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 3rem; color: #666;">
+                            No promotion records found
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<div id="promotion-modal" style="display: none; position: fixed; top: 0; left: 0; 
+    width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; 
+    justify-content: center; align-items: center;">
+    
+    <div style="background: white; border-radius: 15px; padding: 2rem; 
+        max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+        
+        <div style="display: flex; justify-content: space-between; 
+            align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #2c5aa0;">Promotion Details</h3>
+            <button onclick="closePromotionModal()" 
+                style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">
+                &times;
+            </button>
+        </div>
+
+        <div id="promotion-details-content"></div>
+    </div>
+</div>
+
+<script>
+    function showPromotionDetails(promotionId) {
+        const modal = document.getElementById('promotion-modal');
+        const content = document.getElementById('promotion-details-content');
+
+        content.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div style="color: #666;">Loading promotion details for ID: ${promotionId}...</div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+    }
+
+    function closePromotionModal() {
+        document.getElementById('promotion-modal').style.display = 'none';
+    }
+
+    document.getElementById('promotion-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePromotionModal();
+        }
+    });
+</script>
+{% endblock %}

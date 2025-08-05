@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Titles - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Job Titles</h1>
+            <p class="page-subtitle">Manage position titles and salaries</p>
+        </div>
+        <a href="{% url 'jobtitle_add' %}" class="btn btn-primary">Add New Job Title</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Department</th>
+                    <th>Base Salary</th>
+                    <th>Employees</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job_title in job_titles %}
+                    <tr>
+                        <td><strong>{{ job_title.title }}</strong></td>
+                        <td>{{ job_title.department.name }}</td>
+                        <td style="font-weight: 600; color: #28a745;">${{ job_title.base_salary|floatformat:2 }}</td>
+                        <td>
+                            <span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                {{ job_title.employee_set.count }} employees
+                            </span>
+                        </td>
+                        <td>{{ job_title.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'jobtitle_edit' job_title.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #666;">
+                            No job titles found
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

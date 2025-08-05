@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Promote Employee - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Promote Employee</h1>
+    <p class="page-subtitle">Process employee promotion with salary and position changes</p>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <form method="post" id="promotion-form">
+        {% csrf_token %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div>
+                <h3 class="section-heading">Employee & Position</h3>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.employee.label }}</label>
+                    {{ form.employee }}
+                    {% for error in form.employee.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.new_department.label }}</label>
+                    {{ form.new_department }}
+                    {% for error in form.new_department.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.new_job_title.label }}</label>
+                    {{ form.new_job_title }}
+                    {% for error in form.new_job_title.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Right Side: Salary & Details -->
+            <div>
+                <h3 class="section-heading">Salary & Details</h3>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.new_salary.label }}</label>
+                    {{ form.new_salary }}
+                    {% for error in form.new_salary.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">{{ form.promotion_date.label }}</label>
+                    {{ form.promotion_date }}
+                    {% for error in form.promotion_date.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mt-4">
+            <label class="form-label">{{ form.reason.label }}</label>
+            {{ form.reason }}
+            {% for error in form.reason.errors %}
+                <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- Employee Info -->
+        <div id="current-employee-info" class="info-box mt-4" style="display: none;">
+            <h4>Current Employee Information</h4>
+            <div class="info-grid">
+                <div>
+                    <strong>Current Department:</strong> <span id="current-department">-</span><br>
+                    <strong>Current Job Title:</strong> <span id="current-job-title">-</span><br>
+                    <strong>Current Salary:</strong> <span id="current-salary">-</span>
+                </div>
+                <div id="salary-comparison" style="display: none;">
+                    <div class="salary-bump">
+                        <strong>Salary Increase:</strong><br>
+                        <span id="salary-increase" class="increase-text"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions mt-5 pt-4">
+            <a href="{% url 'promotion_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Process Promotion</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .section-heading {
+        color: #2c5aa0;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 0.5rem;
+    }
+    .info-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .salary-bump {
+        background: white;
+        border-left: 4px solid #28a745;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    .increase-text {
+        color: #28a745;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        border-top: 2px solid #e0e0e0;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const employeeField = document.getElementById('id_employee');
+        const departmentField = document.getElementById('id_new_department');
+        const jobTitleField = document.getElementById('id_new_job_title');
+        const salaryField = document.getElementById('id_new_salary');
+        const promotionDateField = document.getElementById('id_promotion_date');
+        const currentInfo = document.getElementById('current-employee-info');
+        const salaryComparison = document.getElementById('salary-comparison');
+
+        let employees = {};
+
+        {% for employee in form.employee.field.queryset %}
+            employees[{{ employee.id }}] = {
+                department: '{{ employee.department.name|default:"-" }}',
+                jobTitle: '{{ employee.job_title.title|default:"-" }}',
+                salary: {{ employee.salary }}
+            };
+        {% endfor %}
+
+        function updateCurrentEmployeeInfo() {
+            const employeeId = employeeField.value;
+            if (employees[employeeId]) {
+                const emp = employees[employeeId];
+                document.getElementById('current-department').textContent = emp.department || '-';
+                document.getElementById('current-job-title').textContent = emp.jobTitle || '-';
+                document.getElementById('current-salary').textContent = '$' + emp.salary.toFixed(2);
+                currentInfo.style.display = 'block';
+                updateSalaryComparison();
+            } else {
+                currentInfo.style.display = 'none';
+                salaryComparison.style.display = 'none';
+            }
+        }
+
+        function updateSalaryComparison() {
+            const employeeId = employeeField.value;
+            const newSalary = parseFloat(salaryField.value);
+            const currentSalary = employees[employeeId]?.salary;
+
+            if (!isNaN(newSalary) && currentSalary) {
+                const increase = newSalary - currentSalary;
+                const percentage = ((increase / currentSalary) * 100).toFixed(1);
+                if (increase > 0) {
+                    document.getElementById('salary-increase').textContent =
+                        `+$${increase.toFixed(2)} (${percentage}% increase)`;
+                    salaryComparison.style.display = 'block';
+                } else {
+                    salaryComparison.style.display = 'none';
+                }
+            }
+        }
+
+        function updateJobTitlesByDepartment() {
+            const deptId = departmentField.value;
+            if (deptId) {
+                fetch(`/api/job-titles/${deptId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        jobTitleField.innerHTML = '<option value="">---------</option>';
+                        data.forEach(job => {
+                            const option = new Option(job.title, job.id);
+                            jobTitleField.add(option);
+                        });
+                    })
+                    .catch(console.error);
+            } else {
+                jobTitleField.innerHTML = '<option value="">---------</option>';
+            }
+        }
+
+        function handleJobTitleChange() {
+            const deptId = departmentField.value;
+            const jobId = jobTitleField.value;
+            if (deptId && jobId) {
+                fetch(`/api/job-titles/${deptId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const job = data.find(j => j.id == jobId);
+                        if (job) {
+                            salaryField.value = job.base_salary;
+                            updateSalaryComparison();
+                        }
+                    });
+            }
+        }
+
+        employeeField.addEventListener('change', updateCurrentEmployeeInfo);
+        departmentField.addEventListener('change', () => {
+            updateJobTitlesByDepartment();
+            setTimeout(updateSalaryComparison, 300);
+        });
+        jobTitleField.addEventListener('change', handleJobTitleChange);
+        salaryField.addEventListener('input', updateSalaryComparison);
+
+        if (promotionDateField && !promotionDateField.value) {
+            promotionDateField.value = new Date().toISOString().split('T')[0];
+        }
+
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => input.classList.add('form-control'));
+    });
+</script>
+
+{% endblock %}

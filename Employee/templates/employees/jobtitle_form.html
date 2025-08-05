@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Job Title{% else %}Add Job Title{% endif %} - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{% if object %}Edit Job Title{% else %}Add New Job Title{% endif %}</h1>
+    <p class="page-subtitle">{% if object %}Update job title information{% else %}Create a new job title{% endif %}</p>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label">{{ form.title.label }}</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.title.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.department.label }}</label>
+            {{ form.department }}
+            {% if form.department.errors %}
+                <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.department.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.base_salary.label }}</label>
+            {{ form.base_salary }}
+            {% if form.base_salary.errors %}
+                <div style="color: #dc3545; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.base_salary.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e0e0e0;">
+            <a href="{% url 'jobtitle_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">{% if object %}Update Job Title{% else %}Create Job Title{% endif %}</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const inputs = form.querySelectorAll('input, textarea, select');
+        
+        inputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+    });
+</script>
+{% endblock %}

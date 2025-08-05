@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 class="page-title">Attendance Records</h1>
+            <p class="page-subtitle">Track employee attendance and working hours</p>
+        </div>
+        <a href="{% url 'attendance_add' %}" class="btn btn-primary">Add Attendance Record</a>
+    </div>
+</div>
+
+<div class="card">
+    <form method="get" class="search-filters">
+        <select name="employee" class="form-control">
+            <option value="">All Employees</option>
+            {% for emp in employees %}
+                <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:"s" %}selected{% endif %}>
+                    {{ emp.full_name }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date_from" placeholder="From Date" class="form-control" value="{{ request.GET.date_from }}">
+        <input type="date" name="date_to" placeholder="To Date" class="form-control" value="{{ request.GET.date_to }}">
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{% url 'attendance_list' %}" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Date</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Hours Worked</th>
+                    <th>Overtime</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendance_records %}
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>{{ record.employee.full_name }}</strong><br>
+                                <small style="color: #666;">{{ record.employee.employee_id }}</small>
+                            </div>
+                        </td>
+                        <td><strong>{{ record.date }}</strong></td>
+                        <td>{{ record.clock_in|default:"-" }}</td>
+                        <td>{{ record.clock_out|default:"-" }}</td>
+                        <td>
+                            {% if record.hours_worked > 0 %}
+                                <span style="font-weight: 600;">{{ record.hours_worked }}h</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if record.overtime_hours > 0 %}
+                                <span style="color: #f39c12; font-weight: 600;">{{ record.overtime_hours }}h</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                       <td>
+                            {% if record.status == 'present' %}
+                                <span style="background: #d4edda; color: #155724; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            {% elif record.status == 'absent' %}
+                                <span style="background: #f8d7da; color: #721c24; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            {% elif record.status == 'sick' %}
+                                <span style="background: #fff3cd; color: #856404; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            {% elif record.status == 'vacation' %}
+                                <span style="background: #d1ecf1; color: #0c5460; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span style="background: #e2e3e5; color: #383d41; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <a href="{% url 'attendance_edit' record.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 3rem; color: #666;">
+                            No attendance records found matching your criteria
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if request.GET.employee %}&employee={{ request.GET.employee }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.employee %}&employee={{ request.GET.employee }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Previous</a>
+            {% endif %}
+            
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.employee %}&employee={{ request.GET.employee }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.employee %}&employee={{ request.GET.employee }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

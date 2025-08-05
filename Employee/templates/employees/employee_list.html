@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Employees - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-wrapper">
+        <div>
+            <h1 class="page-title">Employees</h1>
+            <p class="page-subtitle">Manage your workforce</p>
+        </div>
+        <a href="{% url 'employee_add' %}" class="btn btn-primary">Add New Employee</a>
+    </div>
+</div>
+
+<div class="card">
+    <form method="get" class="search-filters">
+        <input type="text" name="search" placeholder="Search employees..." class="form-control" value="{{ request.GET.search }}">
+        
+        <select name="department" class="form-control">
+            <option value="">All Departments</option>
+            {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="status" class="form-control">
+            <option value="">All Status</option>
+            {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{% url 'employee_list' %}" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Job Title</th>
+                    <th>Status</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td><strong>{{ employee.employee_id }}</strong></td>
+                        <td>
+                            <div>
+                                <a href="{% url 'employee_detail' employee.pk %}">
+                                    <strong>{{ employee.full_name }}</strong>
+                                </a><br>
+                                <small class="text-muted">{{ employee.email }}</small>
+                            </div>
+                        </td>
+                        <td>{{ employee.department.name|default_if_none:"-" }}</td>
+                        <td>{{ employee.job_title.title|default_if_none:"-" }}</td>
+                        <td>
+                            <span class="badge
+                                {% if employee.status == 'active' %} badge-active
+                                {% elif employee.status == 'inactive' %} badge-inactive
+                                {% else %} badge-other {% endif %}">
+                                {{ employee.get_status_display }}
+                            </span>
+                        </td>
+                        <td>${{ employee.salary|floatformat:2 }}</td>
+                        <td>
+                            <div class="table-actions">
+                                <a href="{% url 'employee_detail' employee.pk %}" class="btn btn-secondary btn-sm">View</a>
+                                <a href="{% url 'employee_edit' employee.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted" style="padding: 3rem;">
+                            No employees found matching your criteria
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{{ request.GET.urlencode|cut:'page=' }}">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|cut:'page=' }}">Previous</a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|cut:'page=' }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|cut:'page=' }}">Last »</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-inactive {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-other {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.text-muted {
+    color: #666;
+}
+
+.text-center {
+    text-align: center;
+}
+</style>
+{% endblock %}

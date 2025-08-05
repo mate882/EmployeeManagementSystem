@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - EMS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Employee Management System Overview</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_employees }}</div>
+        <div class="stat-label">Active Employees</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_departments }}</div>
+        <div class="stat-label">Departments</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ today_attendance }}</div>
+        <div class="stat-label">Today's Attendance</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">${{ avg_salary|floatformat:0 }}</div>
+        <div class="stat-label">Average Salary</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+    <div class="card">
+        <h3 style="color: #2c5aa0; margin-bottom: 1rem;">Recent Employees</h3>
+        {% for employee in recent_employees %}
+            <div style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{{ employee.full_name }}</strong><br>
+                    <small style="color: #666;">{{ employee.department.name }} - {{ employee.job_title.title }}</small>
+                </div>
+                <span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem;">
+                    {{ employee.status|title }}
+                </span>
+            </div>
+        {% empty %}
+            <p style="color: #666; text-align: center; padding: 2rem;">No employees found</p>
+        {% endfor %}
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'employee_list' %}" class="btn btn-primary btn-sm">View All Employees</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="color: #2c5aa0; margin-bottom: 1rem;">Recent Promotions</h3>
+        {% for promotion in recent_promotions %}
+            <div style="padding: 0.75rem; border-bottom: 1px solid #e0e0e0;">
+                <div>
+                    <strong>{{ promotion.employee.full_name }}</strong><br>
+                    <small style="color: #666;">{{ promotion.previous_job_title.title }} → {{ promotion.new_job_title.title }}</small><br>
+                    <small style="color: #28a745; font-weight: 600;">${{ promotion.previous_salary }} → ${{ promotion.new_salary }}</small>
+                </div>
+            </div>
+        {% empty %}
+            <p style="color: #666; text-align: center; padding: 2rem;">No promotions found</p>
+        {% endfor %}
+        <div style="text-align: center; margin-top: 1rem;">
+            <a href="{% url 'promotion_list' %}" class="btn btn-primary btn-sm">View All Promotions</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (max-width: 768px) {
+        div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+        }
+    }
+</style>
+{% endblock %}
